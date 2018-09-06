@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class MovementScript : MonoBehaviour {
 
+    public GameObject Lantern;
+
     const string UP = "UP";
     const string DOWN = "DOWN";
     const string LEFT = "LEFT";
@@ -13,33 +15,39 @@ public class MovementScript : MonoBehaviour {
     const int MINEGOLDTIME = 5;
     const int MINEMITHRILTIME = 10;
 
+    const int LIGHTPLACETIME = 3;
+
+    const int LANTERNSALLOWED = 10;
+
+    int LanternsPlaced = 0;
+
     List<GameObject> AllBlockSprites;
 
     GameObject CurrentlyMining;
+    GameObject CurrentlyLighting;
 
     int MovementModifier = 10;
-    double MiningModifier = 1;
-    float MapXScale = 5;
-    float MapYScale = 5;
+    double MiningModifier = .1;
 
     bool IsMining = false;
     double MiningTimer = 0;
 
+    bool IsLighting = false;
+    double LightingTimer = 0;
+
     string CurrentDirection = UP;
 
-    public Sprite TheMapVar;
 
     // Use this for initialization
     void Start()
     {
-        TheMapVar = GameObject.Find("TheMap").GetComponent<SpriteRenderer>().sprite;
         AllBlockSprites = GetAllSpritesInScene();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!IsMining)
+        if (!IsMining && !IsLighting)
         {
             //Down Movement
             if ((Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKey(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) || Input.GetKey(KeyCode.S)))
@@ -73,15 +81,109 @@ public class MovementScript : MonoBehaviour {
             //Torch
             if (Input.GetKeyDown(KeyCode.L))
             {
-                
+                //do they have lanterns to spare?
+                if (LanternsPlaced <= LANTERNSALLOWED) { 
+                    checkLight();
+                }
+                else
+                {
+                    //PLAY A NOPE SOUND
+                }
             }
         }
-        else
+        else if(IsMining)
         {
             MiningTimer += Time.deltaTime;
             ContinueMining();
         }
+        else if (IsLighting)
+        {
+            LightingTimer += Time.deltaTime;
+            ContinueLighting();
+        }
 
+    }
+
+    //check if the player is able to place a light i.e. facing a block or wall
+    void checkLight()
+    {
+        foreach (GameObject sp in AllBlockSprites)
+        {
+
+            Vector3 thebounds = sp.GetComponent<Collider2D>().bounds.size;
+            //check for location
+            switch (CurrentDirection)
+            {
+                case UP:
+                    if ((sp.transform.position.x - thebounds.x / 2) <= gameObject.transform.position.x && (sp.transform.position.x + thebounds.x / 2) >= gameObject.transform.position.x && (sp.transform.position.y - thebounds.y / 2) >= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(sp.transform.position.y - thebounds.y / 2) - Mathf.Abs(gameObject.transform.position.y)) < MiningModifier))
+                    {
+                        placeLight(sp);
+                    }
+                    break;
+                case DOWN:
+                    if ((sp.transform.position.x - thebounds.x / 2) <= gameObject.transform.position.x && (sp.transform.position.x + thebounds.x / 2) >= gameObject.transform.position.x && (sp.transform.position.y + thebounds.y / 2) <= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.y) - Mathf.Abs(sp.transform.position.y + thebounds.y / 2)) < MiningModifier))
+                    {
+                        placeLight(sp);
+                    }
+                    break;
+                case LEFT:
+                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x + thebounds.x / 2) <= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.x) - Mathf.Abs(sp.transform.position.x + thebounds.x / 2)) < MiningModifier))
+                    {
+                        placeLight(sp);
+                    }
+                    break;
+                case RIGHT:
+                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x - thebounds.x / 2) >= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(sp.transform.position.x - thebounds.x / 2) - Mathf.Abs(gameObject.transform.position.x)) < MiningModifier))
+                    {
+                        placeLight(sp);
+                    }
+                    break;
+                default:
+                    //default to nothing
+                    break;
+            }
+        }
+    }
+
+    void placeLight(GameObject sp)
+    {
+        IsLighting = true;
+        CurrentlyLighting = sp;
+    }
+
+    void ContinueLighting()
+    {
+        if(LightingTimer >= LIGHTPLACETIME)
+        {
+            LightingTimer = 0;
+            IsLighting = false;
+            //create the new light
+            float xCo = 0;
+            float yCo = 0;
+            Vector3 thebounds = CurrentlyLighting.GetComponent<Collider2D>().bounds.size;
+            switch (CurrentDirection)
+            {
+                case UP:
+                    yCo = CurrentlyLighting.transform.position.y - thebounds.y / 2;
+                    xCo = CurrentlyLighting.transform.position.x;
+                    break;
+                case DOWN:
+                    yCo = CurrentlyLighting.transform.position.y + thebounds.y / 2;
+                    xCo = CurrentlyLighting.transform.position.x;
+                    break;
+                case LEFT:
+                    yCo = CurrentlyLighting.transform.position.y;
+                    xCo = CurrentlyLighting.transform.position.x + thebounds.x / 2;
+                    break;
+                case RIGHT:
+                    yCo = CurrentlyLighting.transform.position.y;
+                    xCo = CurrentlyLighting.transform.position.x - thebounds.x / 2;
+                    break;
+            }
+            GameObject newLantern = Instantiate(Lantern, new Vector3(xCo, yCo, 0), Quaternion.identity);
+            newLantern.SetActive(true);
+            LanternsPlaced++;
+        }
     }
 
     //check that the player is able to start mining i.e. facing a block
@@ -107,7 +209,7 @@ public class MovementScript : MonoBehaviour {
                     }
                     break;
                 case LEFT:
-                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x + thebounds.x / 2) <= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.y) - Mathf.Abs(sp.transform.position.x + thebounds.x / 2)) < MiningModifier))
+                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x + thebounds.x / 2) <= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.x) - Mathf.Abs(sp.transform.position.x + thebounds.x / 2)) < MiningModifier))
                     {
                         startMining(sp);
                     }
@@ -121,11 +223,7 @@ public class MovementScript : MonoBehaviour {
                 default:
                     //default to nothing
                     break;
-            }
-            if (sp.transform.position.x <= gameObject.transform.position.x && (sp.transform.position.x + thebounds.x) >= gameObject.transform.position.x && sp.transform.position.y >= gameObject.transform.position.y && (sp.transform.position.y - gameObject.transform.position.y < MiningModifier)){
-                startMining(sp);
-            }
-            
+            }            
         }
     }
 
@@ -150,6 +248,8 @@ public class MovementScript : MonoBehaviour {
             Destroy(CurrentlyMining);
             //reset timer
             MiningTimer = 0;
+
+            //TODO: remove lanterns attached to the block
         }
     }
 
@@ -167,5 +267,11 @@ public class MovementScript : MonoBehaviour {
         }
 
         return objectsInScene;
+    }
+
+    public void removeLantern()
+    {
+        LanternsPlaced--;
+        Debug.Log(LanternsPlaced);
     }
 }
