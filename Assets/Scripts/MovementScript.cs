@@ -11,6 +11,10 @@ public class MovementScript : MonoBehaviour {
     const string LEFT = "LEFT";
     const string RIGHT = "RIGHT";
 
+    const string STONE = "STONE";
+    const string GOLD = "GOLD";
+    const string MITHRIL = "MITHRIL";
+
     const int MINESTONETIME = 3;
     const int MINEGOLDTIME = 5;
     const int MINEMITHRILTIME = 10;
@@ -18,15 +22,20 @@ public class MovementScript : MonoBehaviour {
     const int LIGHTPLACETIME = 3;
 
     const int LANTERNSALLOWED = 10;
+    const int MINMOVEMENTMODIFIER = 5;
+    const int MAXMOVEMENTMODIFIER = 10;
 
+    //level specific variables
+    int TheLevel = 1;
     int LanternsPlaced = 0;
+    int MithrilRequired = 10;
 
     List<GameObject> AllBlockSprites;
 
     GameObject CurrentlyMining;
     GameObject CurrentlyLighting;
 
-    int MovementModifier = 10;
+    int MovementModifier = 7;
     double MiningModifier = .1;
 
     bool IsMining = false;
@@ -37,6 +46,10 @@ public class MovementScript : MonoBehaviour {
 
     string CurrentDirection = UP;
 
+    //variables for scoring
+    int StoneCounter = 0;
+    int GoldCounter = 0;
+    int MithrilCounter = 0;
 
     // Use this for initialization
     void Start()
@@ -181,6 +194,7 @@ public class MovementScript : MonoBehaviour {
                     break;
             }
             GameObject newLantern = Instantiate(Lantern, new Vector3(xCo, yCo, 0), Quaternion.identity);
+            newLantern.transform.parent = CurrentlyLighting.transform;
             newLantern.SetActive(true);
             LanternsPlaced++;
         }
@@ -243,13 +257,29 @@ public class MovementScript : MonoBehaviour {
         if(MiningTimer >= TimeNeeded)
         {
             //mining is finished
+            //add one to the appropriate counter
+            BlockScript bs = CurrentlyMining.GetComponent<BlockScript>();
+            switch (bs.blocktype)
+            {
+                case STONE:
+                    StoneCounter++;
+                    break;
+                case GOLD:
+                    GoldCounter++;
+                    break;
+                case MITHRIL:
+                    MithrilCounter++;
+                    if(MithrilCounter == MithrilRequired)
+                    {
+                        LevelWin();
+                    }
+                    break;
+            }
             IsMining = false;
             AllBlockSprites.Remove(CurrentlyMining);
             Destroy(CurrentlyMining);
             //reset timer
             MiningTimer = 0;
-
-            //TODO: remove lanterns attached to the block
         }
     }
 
@@ -261,7 +291,6 @@ public class MovementScript : MonoBehaviour {
         {
             if (sp.GetComponent<Collider2D>() != null && !sp.ToString().Equals(gameObject.ToString()) && sp != null)
             {
-                Debug.Log(sp.ToString());
                 objectsInScene.Add(sp);
             }
         }
@@ -273,5 +302,37 @@ public class MovementScript : MonoBehaviour {
     {
         LanternsPlaced--;
         Debug.Log(LanternsPlaced);
+    }
+
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Debug.Log(collision.gameObject.name);
+        if(collision.gameObject.name == "Lantern(Clone)")
+        {
+            if(MovementModifier < MAXMOVEMENTMODIFIER)
+            {
+                MovementModifier++;
+                Debug.Log(MovementModifier);
+            }
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.name == "Lantern(Clone)")
+        {
+            if (MovementModifier > MINMOVEMENTMODIFIER)
+            {
+                MovementModifier--;
+                Debug.Log(MovementModifier);
+            }
+        }
+    }
+
+    public void LevelWin()
+    {
+        //YAY! The level was won
+        Debug.Log("Congrats! You won the level!");
     }
 }
