@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MovementScript : MonoBehaviour {
 
@@ -22,8 +23,12 @@ public class MovementScript : MonoBehaviour {
     const int LIGHTPLACETIME = 3;
 
     const int LANTERNSALLOWED = 10;
-    const int MINMOVEMENTMODIFIER = 5;
-    const int MAXMOVEMENTMODIFIER = 10;
+    const int MINMOVEMENTMODIFIER = 170;
+    const int MAXMOVEMENTMODIFIER = 330;
+
+    public Text StoneText;
+    public Text GoldText;
+    public Text MithrilText;
 
     //level specific variables
     int TheLevel = 1;
@@ -35,8 +40,8 @@ public class MovementScript : MonoBehaviour {
     GameObject CurrentlyMining;
     GameObject CurrentlyLighting;
 
-    int MovementModifier = 7;
-    double MiningModifier = .1;
+    int MovementModifier = 250;
+    double MiningModifier = 20;
 
     bool IsMining = false;
     double MiningTimer = 0;
@@ -140,7 +145,7 @@ public class MovementScript : MonoBehaviour {
                     }
                     break;
                 case LEFT:
-                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x + thebounds.x / 2) <= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.x) - Mathf.Abs(sp.transform.position.x + thebounds.x / 2)) < MiningModifier))
+                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x + thebounds.x / 2) <= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.x) - Mathf.Abs(sp.transform.position.x + thebounds.x / 2)) < MiningModifier))
                     {
                         placeLight(sp);
                     }
@@ -263,12 +268,15 @@ public class MovementScript : MonoBehaviour {
             {
                 case STONE:
                     StoneCounter++;
+                    StoneText.text = "Stone: " + StoneCounter;
                     break;
                 case GOLD:
                     GoldCounter++;
+                    GoldText.text = "Gold: " + GoldCounter;
                     break;
                 case MITHRIL:
                     MithrilCounter++;
+                    MithrilText.text = "Mithril: " + MithrilCounter;
                     if(MithrilCounter == MithrilRequired)
                     {
                         LevelWin();
@@ -307,13 +315,11 @@ public class MovementScript : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log(collision.gameObject.name);
         if(collision.gameObject.name == "Lantern(Clone)")
         {
             if(MovementModifier < MAXMOVEMENTMODIFIER)
             {
-                MovementModifier++;
-                Debug.Log(MovementModifier);
+                MovementModifier += 20;
             }
         }
     }
@@ -324,8 +330,7 @@ public class MovementScript : MonoBehaviour {
         {
             if (MovementModifier > MINMOVEMENTMODIFIER)
             {
-                MovementModifier--;
-                Debug.Log(MovementModifier);
+                MovementModifier -= 20;
             }
         }
     }
