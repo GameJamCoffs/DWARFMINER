@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class MovementScript : MonoBehaviour {
 
     public GameObject Lantern;
+    public GameObject InitialBlock;
 
     const string UP = "UP";
     const string DOWN = "DOWN";
@@ -23,8 +24,11 @@ public class MovementScript : MonoBehaviour {
     const int LIGHTPLACETIME = 3;
 
     const int LANTERNSALLOWED = 10;
-    const int MINMOVEMENTMODIFIER = 170;
-    const int MAXMOVEMENTMODIFIER = 330;
+
+    const int MINMOVEMENTMODIFIER = 50;
+    const int MAXMOVEMENTMODIFIER = 250;
+
+    const int GOLDMODIFIER = 8;
 
     public Text StoneText;
     public Text GoldText;
@@ -33,14 +37,14 @@ public class MovementScript : MonoBehaviour {
     //level specific variables
     int TheLevel = 1;
     int LanternsPlaced = 0;
-    int MithrilRequired = 10;
+    int MithrilRequired = 20;
 
     List<GameObject> AllBlockSprites;
 
     GameObject CurrentlyMining;
     GameObject CurrentlyLighting;
 
-    int MovementModifier = 250;
+    int MovementModifier = 150;
     double MiningModifier = 20;
 
     bool IsMining = false;
@@ -59,6 +63,7 @@ public class MovementScript : MonoBehaviour {
     // Use this for initialization
     void Start()
     {
+        GenerateMap();
         AllBlockSprites = GetAllSpritesInScene();
     }
 
@@ -112,7 +117,7 @@ public class MovementScript : MonoBehaviour {
         else if(IsMining)
         {
             MiningTimer += Time.deltaTime;
-            ContinueMining();
+            ContinueMining(CurrentlyMining);
         }
         else if (IsLighting)
         {
@@ -253,11 +258,24 @@ public class MovementScript : MonoBehaviour {
         CurrentlyMining = BlockBeingMined;
     }
 
-    void ContinueMining()
+    void ContinueMining(GameObject BlockBeingMined)
     {
         double TimeNeeded = MINESTONETIME;
-
-        //TODO: Add a switch for the type of block
+        switch (BlockBeingMined.GetComponent<BlockScript>().blocktype)
+        {
+            case STONE:
+                TimeNeeded = MINESTONETIME;
+                break;
+            case GOLD:
+                TimeNeeded = MINEGOLDTIME;
+                break;
+            case MITHRIL:
+                TimeNeeded = MINEMITHRILTIME;
+                break;
+            default:
+                TimeNeeded = MINESTONETIME;
+                break;
+        }
 
         if(MiningTimer >= TimeNeeded)
         {
@@ -309,7 +327,6 @@ public class MovementScript : MonoBehaviour {
     public void removeLantern()
     {
         LanternsPlaced--;
-        Debug.Log(LanternsPlaced);
     }
 
 
@@ -339,5 +356,156 @@ public class MovementScript : MonoBehaviour {
     {
         //YAY! The level was won
         Debug.Log("Congrats! You won the level!");
+    }
+
+    private void GenerateMap()
+    {
+        //get the height and width of the map
+        float MapRandom = Random.value;
+        int MapDimension = (int)Mathf.Round(MapRandom * 5) + 15;
+
+        int WidthCounter = 0;
+        int HeightCounter = 0;
+        double xCo = 0;
+        double yCo = 0;
+
+        int TotalBlocks = 0;
+
+        int StoneCounter = 0;
+        int GoldCounter = 0;
+        int MithrilCounter = 0;
+
+
+        double InitialBlockSize = InitialBlock.GetComponent<Renderer>().bounds.size.x - 10;
+
+        while (HeightCounter < MapDimension)
+        {
+            while(WidthCounter < MapDimension)
+            {
+                //set the new block
+                GameObject newBlock = Instantiate(InitialBlock, new Vector3((float)xCo, (float)yCo, 0), Quaternion.identity);
+                //choose whether it is stone, gold or mithril
+                int TypeSelector = (int)Mathf.Round(Random.value * 10);
+                switch (TypeSelector)
+                {
+                    case 0:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    case 1:
+                        if (GoldCounter < MithrilRequired * GOLDMODIFIER)
+                        {
+                            newBlock.GetComponent<BlockScript>().blocktype = GOLD;
+                            GoldCounter++;
+                        }
+                        else
+                        {
+                            newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                            StoneCounter++;
+                        }
+                        break;
+                    case 2:
+                        //stop the mithril being in the first two rows
+                        if (MithrilCounter <= MithrilRequired && HeightCounter > 2)
+                        {
+                            //more even spread
+                            if (MithrilCounter > MithrilRequired / 2 && HeightCounter < 10)
+                            {
+                                newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                                StoneCounter++;
+                            }
+                            else
+                            {
+                                newBlock.GetComponent<BlockScript>().blocktype = MITHRIL;
+                                MithrilCounter++;
+                            }
+                        }
+                        else
+                        {
+                            newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                            StoneCounter++;
+                        }
+                        break;
+                    case 3:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    case 4:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    case 5:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    case 6:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    case 7:
+                        if (GoldCounter < MithrilRequired * GOLDMODIFIER)
+                        {
+                            newBlock.GetComponent<BlockScript>().blocktype = GOLD;
+                            GoldCounter++;
+                        }
+                        else
+                        {
+                            newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                            StoneCounter++;
+                        }
+                        break;
+                    case 8:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    case 9:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    case 10:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+                    default:
+                        newBlock.GetComponent<BlockScript>().blocktype = STONE;
+                        StoneCounter++;
+                        break;
+
+                }
+                newBlock.SetActive(true);
+                TotalBlocks++;
+                WidthCounter++;
+
+                //get new coordinates
+                xCo += InitialBlockSize;
+            }
+            WidthCounter = 0;
+            yCo += InitialBlockSize;
+            xCo = 0;
+            HeightCounter++;
+        }
+
+        if(MithrilCounter < MithrilRequired)
+        {
+            //there is not enough randomly generate mithril, we need to add some more
+            AllBlockSprites = GetAllSpritesInScene();
+            bool StopChecking = false;
+
+            foreach (GameObject sp in AllBlockSprites)
+            {
+                if (sp.name == "Block(Clone)")
+                {
+                    if (sp.GetComponent<BlockScript>().blocktype != MITHRIL && !StopChecking)
+                    {
+                        sp.GetComponent<BlockScript>().blocktype = MITHRIL;
+                        MithrilCounter++;
+                        if (MithrilCounter >= MithrilRequired)
+                        {
+                            StopChecking = true;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
