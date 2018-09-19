@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class MovementScript : MonoBehaviour {
 
@@ -17,13 +18,13 @@ public class MovementScript : MonoBehaviour {
     const string GOLD = "GOLD";
     const string MITHRIL = "MITHRIL";
 
-    const int MINESTONETIME = 3;
-    const int MINEGOLDTIME = 5;
-    const int MINEMITHRILTIME = 10;
+    double MINESTONETIME = 1;
+    double MINEGOLDTIME = 2;
+    double MINEMITHRILTIME = 3;
 
-    const int LIGHTPLACETIME = 3;
+    double LIGHTPLACETIME = 3;
 
-    const int LANTERNSALLOWED = 10;
+    int LANTERNSALLOWED = 10;
 
     const int MINMOVEMENTMODIFIER = 50;
     const int MAXMOVEMENTMODIFIER = 250;
@@ -59,6 +60,11 @@ public class MovementScript : MonoBehaviour {
     int StoneCounter = 0;
     int GoldCounter = 0;
     int MithrilCounter = 0;
+
+    double DarknessSpawnTimer = 0;
+    public GameObject Darkness;
+
+    int MapSizeModifier = 15;
 
     // Use this for initialization
     void Start()
@@ -112,6 +118,14 @@ public class MovementScript : MonoBehaviour {
                 {
                     //PLAY A NOPE SOUND
                 }
+            }
+            DarknessSpawnTimer += Time.deltaTime;
+            if(DarknessSpawnTimer >= (25 - TheLevel))
+            {
+                //spawn a new darkness
+                GameObject NewDarkness = Instantiate(Darkness, new Vector3(1300, 1300, -100), Quaternion.identity);
+                NewDarkness.SetActive(true);
+                DarknessSpawnTimer = 0;
             }
         }
         else if(IsMining)
@@ -215,39 +229,41 @@ public class MovementScript : MonoBehaviour {
     {
         foreach(GameObject sp in AllBlockSprites)
         {
-            
-            Vector3 thebounds = sp.GetComponent<Collider2D>().bounds.size;
-            //check for location
-            switch (CurrentDirection)
+            if (sp != null)
             {
-                case UP:
-                    if ((sp.transform.position.x - thebounds.x / 2) <= gameObject.transform.position.x && (sp.transform.position.x + thebounds.x / 2) >= gameObject.transform.position.x && (sp.transform.position.y - thebounds.y / 2) >= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(sp.transform.position.y - thebounds.y / 2) - Mathf.Abs(gameObject.transform.position.y)) < MiningModifier))
-                    {
-                        startMining(sp);
-                    }
-                    break;
-                case DOWN:
-                    if ((sp.transform.position.x - thebounds.x / 2) <= gameObject.transform.position.x && (sp.transform.position.x + thebounds.x / 2) >= gameObject.transform.position.x && (sp.transform.position.y + thebounds.y / 2) <= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.y) - Mathf.Abs(sp.transform.position.y + thebounds.y / 2)) < MiningModifier))
-                    {
-                        startMining(sp);
-                    }
-                    break;
-                case LEFT:
-                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x + thebounds.x / 2) <= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.x) - Mathf.Abs(sp.transform.position.x + thebounds.x / 2)) < MiningModifier))
-                    {
-                        startMining(sp);
-                    }
-                    break;
-                case RIGHT:
-                    if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x - thebounds.x / 2) >= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(sp.transform.position.x - thebounds.x / 2) - Mathf.Abs(gameObject.transform.position.x))  < MiningModifier))
-                    {
-                        startMining(sp);
-                    }
-                    break;
-                default:
-                    //default to nothing
-                    break;
-            }            
+                Vector3 thebounds = sp.GetComponent<Collider2D>().bounds.size;
+                //check for location
+                switch (CurrentDirection)
+                {
+                    case UP:
+                        if ((sp.transform.position.x - thebounds.x / 2) <= gameObject.transform.position.x && (sp.transform.position.x + thebounds.x / 2) >= gameObject.transform.position.x && (sp.transform.position.y - thebounds.y / 2) >= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(sp.transform.position.y - thebounds.y / 2) - Mathf.Abs(gameObject.transform.position.y)) < MiningModifier))
+                        {
+                            startMining(sp);
+                        }
+                        break;
+                    case DOWN:
+                        if ((sp.transform.position.x - thebounds.x / 2) <= gameObject.transform.position.x && (sp.transform.position.x + thebounds.x / 2) >= gameObject.transform.position.x && (sp.transform.position.y + thebounds.y / 2) <= gameObject.transform.position.y && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.y) - Mathf.Abs(sp.transform.position.y + thebounds.y / 2)) < MiningModifier))
+                        {
+                            startMining(sp);
+                        }
+                        break;
+                    case LEFT:
+                        if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x + thebounds.x / 2) <= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(gameObject.transform.position.x) - Mathf.Abs(sp.transform.position.x + thebounds.x / 2)) < MiningModifier))
+                        {
+                            startMining(sp);
+                        }
+                        break;
+                    case RIGHT:
+                        if ((sp.transform.position.y + thebounds.y / 2) >= gameObject.transform.position.y && (sp.transform.position.y - thebounds.y / 2) <= gameObject.transform.position.y && (sp.transform.position.x - thebounds.x / 2) >= gameObject.transform.position.x && (Mathf.Abs(Mathf.Abs(sp.transform.position.x - thebounds.x / 2) - Mathf.Abs(gameObject.transform.position.x)) < MiningModifier))
+                        {
+                            startMining(sp);
+                        }
+                        break;
+                    default:
+                        //default to nothing
+                        break;
+                }
+            }
         }
     }
 
@@ -356,13 +372,67 @@ public class MovementScript : MonoBehaviour {
     {
         //YAY! The level was won
         Debug.Log("Congrats! You won the level!");
+        //respawn player
+        Vector3 position = new Vector3(-50, -50, 0);
+        gameObject.transform.position = position;
+
+        //increase the level
+        TheLevel++;
+
+        //increase mining time
+        MINEGOLDTIME = MINEGOLDTIME + 0.2;
+        MINESTONETIME = MINESTONETIME + 0.2;
+        MINEMITHRILTIME = MINEMITHRILTIME + 0.2;
+
+        //increase lantern place time
+        LIGHTPLACETIME = LIGHTPLACETIME + 0.2;
+ 
+        //increase lanterns allowed
+        LANTERNSALLOWED += 2;
+
+        //increase Mithril required
+        MithrilRequired += 2;
+
+        if (TheLevel > 20)
+        {
+            //They have won the game
+            SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+        }
+
+        //reset lanterns just in case
+        LanternsPlaced = 0;
+
+        //need to load the next level
+        MithrilCounter = 0;
+        MithrilText.text = "Mithril: " + MithrilCounter;
+
+        //remove all sprites
+        AllBlockSprites = GetAllSpritesInScene();
+
+        foreach (GameObject sp in AllBlockSprites)
+        {
+            if (sp.name == "Block(Clone)" || sp.name == "Darkness(Clone)" || sp.name == "Lantern(Clone)")
+            {
+                Destroy(sp);
+            }
+        }
+        //increase the map size
+        MapSizeModifier += 2;
+        GenerateMap();
+        AllBlockSprites = GetAllSpritesInScene();
+    }
+
+    public void LoseGame()
+    {
+        //AW NO! The darkness got you!
+        SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
     }
 
     private void GenerateMap()
     {
         //get the height and width of the map
         float MapRandom = Random.value;
-        int MapDimension = (int)Mathf.Round(MapRandom * 5) + 15;
+        int MapDimension = (int)Mathf.Round(MapRandom * 5) + MapSizeModifier;
 
         int WidthCounter = 0;
         int HeightCounter = 0;
@@ -507,5 +577,10 @@ public class MovementScript : MonoBehaviour {
                 }
             }
         }
+    }
+
+    public int GetTheLevel()
+    {
+        return TheLevel;
     }
 }
