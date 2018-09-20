@@ -127,5 +127,11 @@ public class DarknessScript : MonoBehaviour {
         {
             ThePlayer.GetComponent<MovementScript>().LoseGame();
         }
+        if (collision.gameObject.name == "Lantern(Clone)")
+        {
+            //it ran into a lantern, we should respawn somewhere else
+            Vector3 respawn = new Vector3(-50,-50,-100);
+            gameObject.transform.position = respawn;
+        }
     }
 }

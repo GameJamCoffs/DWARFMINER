@@ -396,7 +396,7 @@ public class MovementScript : MonoBehaviour {
         if (TheLevel > 20)
         {
             //They have won the game
-            SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+            SceneManager.LoadScene("GameWin", LoadSceneMode.Single);
         }
 
         //reset lanterns just in case
@@ -425,7 +425,7 @@ public class MovementScript : MonoBehaviour {
     public void LoseGame()
     {
         //AW NO! The darkness got you!
-        SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+        SceneManager.LoadScene("GameLose", LoadSceneMode.Single);
     }
 
     private void GenerateMap()
